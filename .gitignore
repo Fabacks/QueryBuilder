@@ -1,0 +1,5 @@
+doc/*
+.phpunit.result.cache
+build/*
+vendor/*
+composer.lock

@@ -1,0 +1,38 @@
+{
+    "name": "fabacks/functions",
+    "description": "A PHP class query builder for sql",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Fabien COLAS",
+            "email": "colas.fab@dahoo.fr"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fabacks\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fabacks\\Test\\": "Tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-ci": "vendor/bin/phpunit -c phpunit.xml"
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
