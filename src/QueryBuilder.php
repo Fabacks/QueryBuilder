@@ -6,7 +6,7 @@
 *	@site  dahoo.Fr
 *	@gith https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 19/08/2019
+*	@Update : 27/08/2019
 *	@version 1.0.0
 */
 namespace Fabacks;

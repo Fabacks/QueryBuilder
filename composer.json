@@ -1,5 +1,5 @@
 {
-    "name": "fabacks/functions",
+    "name": "fabacks/queryBuilder",
     "description": "A PHP class query builder for sql",
     "type": "library",
     "license": "MIT",
