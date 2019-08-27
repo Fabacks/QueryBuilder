@@ -6,7 +6,7 @@ QueryBuilder est une librairie de création de requête SQL
 
 ## With composer 
 ```php
-    composer require fabacks/queryBuilder @dev
+    composer require fabacks/querybuilder @dev
 ```
 
 ### Without composer
