@@ -6,7 +6,7 @@
 *	@site  dahoo.Fr
 *	@gith https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 27/08/2019
+*	@Update : 16/09/2019
 *	@version 1.0.0
 */
 namespace Fabacks;
@@ -14,7 +14,7 @@ class QueryBuilder {
     private $fields = array('*');
     private $from;
     private $joins = array();
-    private $where;
+    private $where = "";
     private $params = array();    
     private $order = array();
     private $limit;
@@ -53,12 +53,14 @@ class QueryBuilder {
     /**
      * Jointure de table
      *
-     * @param string $join valeiur possible => "INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL"
-     * @param string $table
-     * @param string $alias
+     * @param string $join type de jointure, valeur possible => "INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL"
+     * @param string $table Table de la jointure
+     * @param string $alias alias possible, peut etre null ou string vide si pas d'alias
+     * @param string $onLeft jointure gauche
+     * @param string $onRight jointure  droite 
      * @return self
      */
-    public function join(string $join, string $table, string $alias = null): self
+    public function join(string $join, string $table, string $alias, string $onLeft, string $onRight): self
     {
         $join = strtoupper($join);
         if( !in_array($join, array("INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL")) ){
@@ -66,9 +68,11 @@ class QueryBuilder {
         }
 
         $this->joins[] = array(
-            "join"  => $join,
-            "table" => $table,
-            "alias" => $alias
+            "join"    => $join,
+            "table"   => $table,
+            "alias"   => $alias,
+            "onLeft"  => $onLeft,
+            "onRight" => $onRight,
         );
         return $this;
     }
@@ -81,7 +85,7 @@ class QueryBuilder {
      */
     public function where(string $where): self 
     {
-        $this->where = $where;
+        $this->where .= $where;
         return $this;
     }
 
@@ -168,7 +172,8 @@ class QueryBuilder {
         if( count($this->joins) > 0) {
             foreach($this->joins as $key => $join):
                 $sql .= ' '.$join["join"].' JOIN '.$join['table']; 
-                $sql .= ($join['alias'] !== null ? ' AS '.$join['alias'] : '');
+                $sql .= ( !empty($join['alias']) ? ' AS '.$join['alias'] : '');
+                $sql .= ' ON '.$join['onLeft'].' = '.$join['onRight'];
             endforeach;
         }
 

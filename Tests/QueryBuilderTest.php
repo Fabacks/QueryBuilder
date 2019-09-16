@@ -111,4 +111,14 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             
         $this->assertEquals("SELECT id, name, product FROM users", $q->toSQL());
     }
+
+    public function testJoin() {
+        $q = $this->getBuilder()
+            ->select("user.name")
+            ->from("users")
+            ->join("INNER", "user_order", "order", "order.user", "user.id");
+        
+        $sql = "SELECT user.name FROM users INNER JOIN user_order AS order ON order.user = user.id";
+        $this->assertEquals($sql, $q->toSQL());
+    }
 }
