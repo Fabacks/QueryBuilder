@@ -6,8 +6,8 @@
 *	@site  dahoo.Fr
 *	@gith https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 16/09/2019
-*	@version 1.0.0
+*	@Update : 17/09/2019
+*	@version 1.1.0
 */
 namespace Fabacks;
 class QueryBuilder {
@@ -77,15 +77,23 @@ class QueryBuilder {
         return $this;
     }
 
-        /**
+    /**
      * Ajoute une|des clausse where
      *
-     * @param string $where
+     * @param string $where La condition
+     * @param string $append (Optionnel) Ajoute le type de concaténation automatiquement
      * @return self
      */
-    public function where(string $where): self 
+    public function where(string $where, $append = null): self 
     {
-        $this->where .= $where;
+        $list = array("AND", "OR");
+        $append = strtoupper($append);
+        if( $append != null && in_array($append, $list) ):
+            $this->where .= ' '.$append.' '.$where;
+        else :
+            $this->where .= $where;
+        endif;
+
         return $this;
     }
 
