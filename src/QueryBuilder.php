@@ -6,19 +6,20 @@
 *	@site  dahoo.Fr
 *	@gith https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 17/09/2019
-*	@version 1.1.0
+*	@Update : 05/12/2019
+*   @PHP min : 7.1
+*	@version 1.2.0
 */
 namespace Fabacks;
 class QueryBuilder {
     private $fields = array('*');
-    private $from;
+    private $from = "";
     private $joins = array();
     private $where = "";
     private $params = array();    
     private $order = array();
-    private $limit;
-    private $offset;
+    private $limit = 0;
+    private $offset = null;
 
     /**
      * Selection des éléments
@@ -33,7 +34,17 @@ class QueryBuilder {
         }   
 
         $this->fields = ($this->fields === ['*'] ? $fields : array_merge($this->fields, $fields) );
-       
+        return $this;
+    }
+
+    /**
+     * Réinitialise la selection des éléments par defaut '*'
+     *
+     * @return self
+     */
+    public function selectClear(): self
+    {
+        $this->fields = array('*');
         return $this;
     }
 
@@ -133,22 +144,25 @@ class QueryBuilder {
      * Limite des données
      *
      * @param integer $limit
+     * @param integer $offset
      * @return self
      */
-    public function limit(int $limit): self 
+    public function limit(int $limit, int $offset = null): self 
     {
         $this->limit = $limit;
-        
+        if( $offset != null )
+            $this->offset = $offset;
+
         return $this;
     }
 
     /**
-     * Offeset des données
+     * Offset des données
      *
      * @param integer $offset
      * @return self
      */
-    public function offset(int $offset): self 
+    public function offset(?int $offset): self 
     {
         $this->offset = $offset;
         
@@ -163,7 +177,9 @@ class QueryBuilder {
      */
     public function page(int $page): self 
     {
-        return $this->offset($this->limit * ($page - 1));
+        $offset = ($this->limit * $page) - $this->limit;
+        $offset = $offset < 0 ? 0 : $offset; 
+        return $this->offset($offset);
     }
 
 
