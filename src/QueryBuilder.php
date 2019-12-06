@@ -24,7 +24,7 @@ class QueryBuilder {
     /**
      * Selection des éléments
      *
-     * @param string|array ...$fields
+     * @param array string ...$fields
      * @return self
      */
     public function select(...$fields): self
