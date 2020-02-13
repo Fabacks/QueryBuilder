@@ -4,21 +4,21 @@
 *	@description Classe construction de requette SQL
 *	@author Fabien COLAS
 *	@site  dahoo.Fr
-*	@gith https://github.com/Fabacks
+*	@git https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 05/12/2019
+*	@Update : 27/01/2020
 *   @PHP min : 7.1
-*	@version 1.2.0
+*	@version 1.3.0
 */
 namespace Fabacks;
 class QueryBuilder {
     private $fields = array('*');
-    private $from = "";
-    private $joins = array();
-    private $where = "";
-    private $params = array();    
-    private $order = array();
-    private $limit = 0;
+    private $from   = "";
+    private $joins  = array();
+    private $where  = "";
+    private $params = array();
+    private $order  = array();
+    private $limit  = 0;
     private $offset = null;
 
     /**
@@ -122,6 +122,18 @@ class QueryBuilder {
     }
 
     /**
+     * Permet de faire un GROUP BY
+     *
+     * @param string $key champs
+     * @return self
+     */
+    public function groupBy(string $key): self 
+    {
+        $this->group[] = $key;
+        return $this;
+    }
+
+    /**
      * Organisation des données
      *
      * @param string $key champs
@@ -193,15 +205,15 @@ class QueryBuilder {
         $fields = implode(', ', $this->fields);
         $sql = "SELECT $fields FROM {$this->from}"; 
 
-        if( count($this->joins) > 0) {
+        if( count($this->joins) > 0 ):
             foreach($this->joins as $key => $join):
                 $sql .= ' '.$join["join"].' JOIN '.$join['table']; 
                 $sql .= ( !empty($join['alias']) ? ' AS '.$join['alias'] : '');
                 $sql .= ' ON '.$join['onLeft'].' = '.$join['onRight'];
             endforeach;
-        }
+        endif;
 
-        if( $this->where ) {
+        if( $this->where ):
             $where = $this->where;
             if( count($this->params) > 0) {
                 foreach($this->params as $key => $value):
@@ -210,19 +222,23 @@ class QueryBuilder {
             }
 
             $sql .= " WHERE ". $where;
-        }
+        endif;
 
-        if( !empty($this->order) ){
+        if( !empty($this->group) ):
+            $sql .= " GROUP BY ".implode(', ', $this->group);
+        endif;
+
+        if( !empty($this->order) ):
             $sql .= " ORDER BY ".implode(', ', $this->order);
-        }
+        endif;
 
-        if( $this->limit > 0) {
+        if( $this->limit > 0 ):
             $sql .= " LIMIT ".$this->limit; 
-        }
+        endif;
 
-        if( $this->offset !== null ) {
+        if( $this->offset !== null ):
             $sql .= " OFFSET ".$this->offset; 
-        }        
+        endif;
 
         return $sql;
     }
