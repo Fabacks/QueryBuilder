@@ -6,7 +6,7 @@
 *	@site  dahoo.Fr
 *	@git https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 27/01/2020
+*	@Update : 24/03/2020
 *   @PHP min : 7.1
 *	@version 1.3.0
 */
@@ -18,6 +18,7 @@ class QueryBuilder {
     private $where  = "";
     private $params = array();
     private $order  = array();
+    private $having  = "";
     private $limit  = 0;
     private $offset = null;
 
@@ -153,6 +154,26 @@ class QueryBuilder {
     }
 
     /**
+     * Ajoute une|des clausse having
+     *
+     * @param string $pHaving La condition
+     * @param string $append (Optionnel) Ajoute le type de concaténation automatiquement
+     * @return self
+     */
+    public function having(string $pHaving, $append = null): self 
+    {
+        $list = array("AND", "OR");
+        $append = strtoupper($append);
+        if( $append != null && in_array($append, $list) ):
+            $this->having .= ' '.$append.' '.$pHaving;
+        else :
+            $this->having .= $pHaving;
+        endif;
+
+        return $this;
+    }
+
+    /**
      * Limite des données
      *
      * @param integer $limit
@@ -215,11 +236,11 @@ class QueryBuilder {
 
         if( $this->where ):
             $where = $this->where;
-            if( count($this->params) > 0) {
+            if( count($this->params) > 0 ):
                 foreach($this->params as $key => $value):
                     $where = str_replace(':'.$key, $value, $where);
                 endforeach;
-            }
+            endif;
 
             $sql .= " WHERE ". $where;
         endif;
@@ -230,6 +251,10 @@ class QueryBuilder {
 
         if( !empty($this->order) ):
             $sql .= " ORDER BY ".implode(', ', $this->order);
+        endif;
+
+        if( !empty($this->having) ):
+            $sql .= " HAVING ". $this->having;
         endif;
 
         if( $this->limit > 0 ):

@@ -126,6 +126,25 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
         $this->assertEquals("SELECT * FROM users ORDER BY id, name DESC", $q);
     }
 
+    public function test_having() {
+        $q = $this->getBuilder()
+            ->from("users")
+            ->having("age > 10")
+            ->toSQL();
+
+        $this->assertEquals("SELECT * FROM users HAVING age > 10", $q);
+    }
+
+    public function test_having_multiple() {
+        $q = $this->getBuilder()
+            ->from("users")
+            ->having("age > 10")
+            ->having("brother = 2", "AND")
+            ->toSQL();
+
+        $this->assertEquals("SELECT * FROM users HAVING age > 10 AND brother = 2", $q);
+    }
+
     public function test_limit() {
         $q = $this->getBuilder()
             ->from("users")

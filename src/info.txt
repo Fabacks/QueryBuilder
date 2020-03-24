@@ -1,0 +1,6 @@
+Ordre execute sql 
+    1. Table expressions are generated and executed (FROM, JOIN)
+    2. Rows filtered (WHERE)
+    3. Projections and aggregations applied (column list, aggregates, GROUP BY) 
+    4. Aggregations filtered (HAVING)
+    5. Results limited (LIMIT, OFFSET)
