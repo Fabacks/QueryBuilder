@@ -90,7 +90,7 @@ class QueryBuilder {
     }
 
     /**
-     * Ajoute une|des clausse where
+     * Ajoute une|des clausse where. La concaténation par défaut est un "AND"
      *
      * @param string $where La condition
      * @param string $append (Optionnel) Ajoute le type de concaténation automatiquement
@@ -103,7 +103,7 @@ class QueryBuilder {
         if( $append != null && in_array($append, $list) ):
             $this->where .= ' '.$append.' '.$where;
         else :
-            $this->where .= $where;
+            $this->where .= (empty($this->where) ? '' : " AND ").$where;
         endif;
 
         return $this;

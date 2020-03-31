@@ -78,6 +78,16 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
         $this->assertEquals("SELECT * FROM users WHERE id > 4", $q);
     }
 
+    public function test_where_multiple() {
+        $q = $this->getBuilder()
+            ->from("users")
+            ->where("id > 4")
+            ->where("age < 15")
+            ->toSQL();
+
+        $this->assertEquals("SELECT * FROM users WHERE id > 4 AND age < 15", $q);
+    }
+
     public function test_where_parametric() {
         $q = $this->getBuilder()
             ->from("users")
