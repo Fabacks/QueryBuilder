@@ -1,26 +1,32 @@
 <?php
 /**
 *	@class Fabacks\QueryBuilder
-*	@description Classe construction de requette SQL
+*	@description Classe construction de requête SQL
 *	@author Fabien COLAS
 *	@site  dahoo.Fr
 *	@git https://github.com/Fabacks
 *	@Copyright Licence CC-by-nc-sa 
-*	@Update : 24/03/2020
+*	@Update : 12/01/2025
 *   @PHP min : 7.1
-*	@version 1.3.0
+*	@version 1.5.0
 */
 namespace Fabacks;
-class QueryBuilder {
+
+use Exception;
+
+class QueryBuilder
+{
     private $fields = array('*');
     private $from   = "";
     private $joins  = array();
     private $where  = "";
     private $params = array();
     private $order  = array();
-    private $having  = "";
+    private $group  = array();
+    private $having = "";
     private $limit  = 0;
     private $offset = null;
+
 
     /**
      * Selection des éléments
@@ -32,14 +38,14 @@ class QueryBuilder {
     {
         if( is_array($fields[0]) ) {
             $fields = $fields[0];
-        }   
+        }
 
         $this->fields = ($this->fields === ['*'] ? $fields : array_merge($this->fields, $fields) );
         return $this;
     }
 
     /**
-     * Réinitialise la selection des éléments par defaut '*'
+     * Réinitialise la selection des éléments par défaut '*'
      *
      * @return self
      */
@@ -50,7 +56,7 @@ class QueryBuilder {
     }
 
     /**
-     * Table de séléction
+     * Table de sélection
      *
      * @param string $table Le nom de la table
      * @param string $alias L'alias de la table
@@ -67,30 +73,30 @@ class QueryBuilder {
      *
      * @param string $join type de jointure, valeur possible => "INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL"
      * @param string $table Table de la jointure
-     * @param string $alias alias possible, peut etre null ou string vide si pas d'alias
+     * @param string $alias alias possible, peut être null ou string vide si pas d'alias
      * @param string $onLeft jointure gauche
      * @param string $onRight jointure  droite 
      * @return self
      */
-    public function join(string $join, string $table, string $alias, string $onLeft, string $onRight): self
+    public function join(string $join, string $table, string $alias, string $onLeft, string $onRight, string $typeJoin = '='): self
     {
         $join = strtoupper($join);
-        if( !in_array($join, array("INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL")) ){
-            $join = "INNER";
-        }
+        if( !in_array($join, array("INNER", "CROSS", "LEFT", "RIGHT", "FULL", "SELF", "NATURAL")) )
+            throw new Exception("Type of join is not valid : $join");
 
         $this->joins[] = array(
-            "join"    => $join,
-            "table"   => $table,
-            "alias"   => $alias,
-            "onLeft"  => $onLeft,
-            "onRight" => $onRight,
+            'join'     => $join,
+            'table'    => $table,
+            'alias'    => $alias,
+            'onLeft'   => $onLeft,
+            'onRight'  => $onRight,
+            'typeJoin' => $typeJoin,
         );
         return $this;
     }
 
     /**
-     * Ajoute une|des clausse where. La concaténation par défaut est un "AND"
+     * Ajoute une|des clause where. La concaténation par défaut est un "AND"
      *
      * @param string $where La condition
      * @param string $append (Optionnel) Ajoute le type de concaténation automatiquement
@@ -99,7 +105,7 @@ class QueryBuilder {
     public function where(string $where, $append = null): self 
     {
         $list = array("AND", "OR");
-        $append = strtoupper($append);
+        $append = $append == null ? '' : strtoupper($append);
         if( $append != null && in_array($append, $list) ):
             $this->where .= ' '.$append.' '.$where;
         else :
@@ -110,10 +116,10 @@ class QueryBuilder {
     }
 
     /**
-     * Remplace les parametres dans la clausse where 
+     * Remplace les paramètres dans la clause where 
      *
      * @param string $key
-     * @param [type] $value
+     * @param mixed $value
      * @return self
      */
     public function setParam(string $key, $value): self 
@@ -154,16 +160,16 @@ class QueryBuilder {
     }
 
     /**
-     * Ajoute une|des clausse having
+     * Ajoute une|des clause having
      *
      * @param string $pHaving La condition
-     * @param string $append (Optionnel) Ajoute le type de concaténation automatiquement
+     * @param string $pAppend (Optionnel) Ajoute le type de concaténation automatiquement
      * @return self
      */
-    public function having(string $pHaving, $append = null): self 
+    public function having(string $pHaving, $pAppend = null): self 
     {
         $list = array("AND", "OR");
-        $append = strtoupper($append);
+        $append = $pAppend === null ? null : strtoupper($pAppend);
         if( $append != null && in_array($append, $list) ):
             $this->having .= ' '.$append.' '.$pHaving;
         else :
@@ -198,7 +204,6 @@ class QueryBuilder {
     public function offset(?int $offset): self 
     {
         $this->offset = $offset;
-        
         return $this;
     }
 
@@ -223,53 +228,99 @@ class QueryBuilder {
      */
     public function toSQL(): string 
     {
-        $fields = implode(', ', $this->fields);
-        $sql = "SELECT $fields FROM {$this->from}"; 
+        // Partie SELECT
+        $sql = $this->buildSelect();
 
+        // Partie FROM
+        $sql .= ' FROM '.$this->from;
+
+        // Partie JOINS
         if( count($this->joins) > 0 ):
-            foreach($this->joins as $key => $join):
-                $sql .= ' '.$join["join"].' JOIN '.$join['table']; 
-                $sql .= ( !empty($join['alias']) ? ' AS '.$join['alias'] : '');
-                $sql .= ' ON '.$join['onLeft'].' = '.$join['onRight'];
-            endforeach;
+            $sql .= $this->buildJoins();
         endif;
 
+        // Partie WHERE
         if( $this->where ):
-            $where = $this->where;
-            if( count($this->params) > 0 ):
-                foreach($this->params as $key => $value):
-                    $where = str_replace(':'.$key, $value, $where);
-                endforeach;
-            endif;
-
-            $sql .= " WHERE ". $where;
+            $sql .= ' WHERE '. $this->buildWhere();
         endif;
 
+        // Partie GROUP
         if( !empty($this->group) ):
             $sql .= " GROUP BY ".implode(', ', $this->group);
         endif;
 
+        // Partie ORDRER BY
         if( !empty($this->order) ):
             $sql .= " ORDER BY ".implode(', ', $this->order);
         endif;
 
+        // Partie HAVING
         if( !empty($this->having) ):
             $sql .= " HAVING ". $this->having;
         endif;
 
+        // Partie LIMIT
         if( $this->limit > 0 ):
             $sql .= " LIMIT ".$this->limit; 
         endif;
 
+        // Partie OFFSET
         if( $this->offset !== null ):
             $sql .= " OFFSET ".$this->offset; 
         endif;
 
+        return $sql.';';
+    }
+
+    /**
+     * Rend la chaine SQL et les paramètres en array
+     * @return array 
+     */
+    public function toSQLWithParams()
+    {
+        return [
+            'query' => $this->toSQL(),
+            'params' => $this->params,
+        ];
+    }
+
+    /**
+     * Rend la chaine SELECT
+     * @return string 
+     */
+    private function buildSelect()
+    {
+        return "SELECT ".implode(', ', $this->fields);
+    }
+
+    private function buildJoins(): string 
+    {
+        $sql = '';
+
+        foreach($this->joins as $key => $join):
+            $sql .= ' '.$join["join"].' JOIN '.$join['table']; 
+            $sql .= ( !empty($join['alias']) ? ' AS '.$join['alias'] : '');
+            $sql .= ' ON '.$join['onLeft'].' '.$join['typeJoin'].' '.$join['onRight'];
+        endforeach;
+
         return $sql;
+    }
+
+    private function buildWhere(): string
+    {
+        $where = $this->where;
+        if( count($this->params) > 0 ):
+            foreach($this->params as $key => $value):
+                $where = str_replace(':'.$key, $value, $where);
+            endforeach;
+        endif;
+
+        return $where;
     }
 
     function __toString()
     {
-        return self::toSQL();
+        return $this->toSQL();
     }
+
 }

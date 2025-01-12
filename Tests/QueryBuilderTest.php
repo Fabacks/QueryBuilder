@@ -7,37 +7,42 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
     public function getBuilder(): QueryBuilder {
         return new QueryBuilder();
     }
-    
+
     public function test_simpleQuery() {
         $q = $this->getBuilder()
-            ->from("users", "u")
-            ->toSQL();
+            ->from("users", "u");
 
-        $this->assertEquals("SELECT * FROM users AS u", $q);
+        $sql = "SELECT * FROM users AS u;";
+        $this->assertEquals($sql, $q->toSQL());
     }
 
     public function test_select() {
         $q = $this->getBuilder()
             ->select("id", "name", "product")
             ->from("users");
-        $this->assertEquals("SELECT id, name, product FROM users", $q->toSQL());
+
+        $sql = "SELECT id, name, product FROM users;";
+        $this->assertEquals($sql, $q->toSQL());
     }
 
     public function test_select_multiple() {
         $q = $this->getBuilder()
-            ->select("id", "name")
+            ->select("id")
+            ->select("name")
             ->from("users")
             ->select('product');
 
-        $this->assertEquals("SELECT id, name, product FROM users", $q->toSQL());
+        $sql = "SELECT id, name, product FROM users;";
+        $this->assertEquals($sql, $q->toSQL());
     }
 
     public function test_select_array() {
         $q = $this->getBuilder()
             ->select(["id", "name", "product"])
             ->from("users");
-            
-        $this->assertEquals("SELECT id, name, product FROM users", $q->toSQL());
+
+        $sql = "SELECT id, name, product FROM users;";
+        $this->assertEquals($sql, $q->toSQL());
     }
 
     public function test_select_clear() {
@@ -47,7 +52,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->from("users", "u")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users AS u", $q);
+        $this->assertEquals("SELECT * FROM users AS u;", $q);
 
         $q = $this->getBuilder()
             ->select("name, firstname")
@@ -56,7 +61,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->from("users", "u")
             ->toSQL();
 
-        $this->assertEquals("SELECT name FROM users AS u", $q);
+        $query = "SELECT name FROM users AS u;";
+        $this->assertEquals($query, $q);
     }
 
     public function test_join() {
@@ -64,8 +70,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->select("user.name")
             ->from("users")
             ->join("INNER", "user_order", "order", "order.user", "user.id");
-        
-        $sql = "SELECT user.name FROM users INNER JOIN user_order AS order ON order.user = user.id";
+
+        $sql = "SELECT user.name FROM users INNER JOIN user_order AS order ON order.user = user.id;";
         $this->assertEquals($sql, $q->toSQL());
     }
     
@@ -75,7 +81,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->where("id > 4")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users WHERE id > 4", $q);
+        $this->assertEquals("SELECT * FROM users WHERE id > 4;", $q);
     }
 
     public function test_where_multiple() {
@@ -85,7 +91,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->where("age < 15")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users WHERE id > 4 AND age < 15", $q);
+        $this->assertEquals("SELECT * FROM users WHERE id > 4 AND age < 15;", $q);
     }
 
     public function test_where_parametric() {
@@ -95,7 +101,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->setParam("id", 3)
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users WHERE id > 3", $q);
+        $this->assertEquals("SELECT * FROM users WHERE id > 3;", $q);
     }
     
     public function test_groupBy() {
@@ -104,7 +110,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->groupBy("nom")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users GROUP BY nom", $q);
+        $this->assertEquals("SELECT * FROM users GROUP BY nom;", $q);
     }
 
     public function test_groupBy_multiple() {
@@ -114,7 +120,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->groupBy("prenom")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users GROUP BY nom, prenom", $q);
+        $this->assertEquals("SELECT * FROM users GROUP BY nom, prenom;", $q);
     }
 
     public function test_orderBy() {
@@ -123,7 +129,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users AS u ORDER BY id DESC", $q);
+        $this->assertEquals("SELECT * FROM users AS u ORDER BY id DESC;", $q);
     }
 
     public function test_orderBy_multiple() {
@@ -133,7 +139,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("name", "desc")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id, name DESC", $q);
+        $this->assertEquals("SELECT * FROM users ORDER BY id, name DESC;", $q);
     }
 
     public function test_having() {
@@ -142,7 +148,7 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->having("age > 10")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users HAVING age > 10", $q);
+        $this->assertEquals("SELECT * FROM users HAVING age > 10;", $q);
     }
 
     public function test_having_multiple() {
@@ -152,7 +158,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->having("brother = 2", "AND")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users HAVING age > 10 AND brother = 2", $q);
+        $query ="SELECT * FROM users HAVING age > 10 AND brother = 2;";
+        $this->assertEquals($query, $q);
     }
 
     public function test_limit() {
@@ -162,7 +169,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id DESC LIMIT 10", $q);
+        $query = "SELECT * FROM users ORDER BY id DESC LIMIT 10;";
+        $this->assertEquals($query, $q);
     }
 
     public function test_limitOffset() {
@@ -172,7 +180,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 5", $q);
+        $query = "SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 5;";
+        $this->assertEquals($query, $q);
     }
 
     public function test_offset() {
@@ -183,7 +192,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 3", $q);
+        $query = "SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 3;";
+        $this->assertEquals($query, $q);
     }
 
     public function test_page() {
@@ -194,7 +204,9 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 20", $q);
+        $query = "SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 20;";
+        $this->assertEquals($query , $q);
+
 
         $q = $this->getBuilder()
             ->from("users")
@@ -203,7 +215,8 @@ final class QueryBuilderTest extends \PHPUnit\Framework\TestCase {
             ->orderBy("id", "DESC")
             ->toSQL();
 
-        $this->assertEquals("SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 0", $q);
+        $query = "SELECT * FROM users ORDER BY id DESC LIMIT 10 OFFSET 0;";
+        $this->assertEquals($query, $q);
     }
 
 
